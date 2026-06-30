@@ -9,9 +9,11 @@ The model is trained on engineered features: ELO ratings, recent form, head-to-h
 ## Setup
 
 ```bash
-git clone https://github.com/eliott-kalfon/tabpfn-football-predictions.git
-cd tabpfn-football-predictions
+git clone https://github.com/munshi007/worldcup-2026-predictions.git
+cd worldcup-2026-predictions
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env   # then add your TABPFN_API_KEY (and optional ODDS_API_KEY)
 ```
 
 ## Run
@@ -70,3 +72,13 @@ Backtest 2026-05 (87 matches): accuracy 59%, log-loss 0.861
 | `h2h_gd` | Average goal difference in head-to-head (from home team's perspective) |
 | `neutral` | 1 if played at a neutral venue |
 | `importance` | Tournament importance score (60 = World Cup, 20 = friendly) |
+| `val_home`, `val_away`, `val_diff` | log squad market value (€m) per team and the gap, from `team_values.csv` — current squad quality, which results-based ELO lags. NaN for teams not in the table |
+
+## Extras added on top of the template
+
+- **`--fixtures FILE.csv`** — predict an upcoming-fixtures CSV (`date,home_team,away_team`; `neutral` auto-derived, names normalized via `TEAM_ALIASES`). See `worldcup_r32.csv`.
+- **Squad market-value features** (`team_values.csv`) — CV-validated ~0.01 log-loss gain on competitive neutral matches; the single biggest improvement found.
+- **Temperature calibration** — fit on held-out neutral matches, directly targets log-loss (small ~0.001 gain; TabPFN is already well-calibrated).
+- **`--symmetric`** — home/away symmetry augmentation + mirror-averaging. Tested and did **not** help on neutral matches, so it is off by default; flag exists to reproduce.
+- **Live market-odds blending** (the sharpest signal). With `ODDS_API_KEY` set (the-odds-api.com), fetches current World Cup odds, prefers **sharp books** (Pinnacle / Betfair exchange), de-vigs them with **Shin's method** (corrects favourite-longshot bias), and linear-pools market + model per fixture. Flags: `--no-odds`, `--odds-weight` (default 0.60). Predictions CSV saves model-only and market-only columns alongside the blend.
+- **`score.py`** — validation harness. `python score.py predictions_*.csv` reports log-loss/accuracy vs actual results; `--tune` sweeps the blend weight to find the log-loss-minimising mix once games are played. Use it after each round to tune `ODDS_WEIGHT` from evidence.
