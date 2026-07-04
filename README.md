@@ -1,10 +1,18 @@
-# TabPFN Football Predictions
+# ⚽ 2026 World Cup — ML Match Predictions
 
-This repository is a template to participate in Prior Labs' [World Cup Game Outcome Prediction competition](https://ux.priorlabs.ai/worldcup). It has a basic script that outputs predictions with a standard prediction template. Use this template to generate predictions. The `predict.py` script should only be a source of inspiration, feel free to fork the repo and add your own ideas.
+Live win/draw/loss predictions for the 2026 World Cup, using [TabPFN](https://github.com/PriorLabs/TabPFN) blended with de-vigged **sharp bookmaker odds**. Built for Prior Labs' [World Cup Game Outcome Prediction competition](https://ux.priorlabs.ai/worldcup).
 
-The script predicts international football match outcomes using [TabPFN](https://github.com/PriorLabs/TabPFN) using the [client repository](https://github.com/PriorLabs/tabpfn-client). It achieves ~59% accuracy and ~0.86 log-loss on held-out data. There is a good margin of progression. We look forward to your submission!
+**Current track record: 75% outcome accuracy · 0.67 log-loss across 28 graded matches** (vs a ~0.86 / ~59% baseline).
 
-The model is trained on engineered features: ELO ratings, recent form, head-to-head record, rest days, and tournament importance. Data comes from [martj42/international_results](https://github.com/martj42/international_results).
+### 👀 Just want to see the predictions? (no code)
+**→ [Live dashboard](https://munshi007.github.io/worldcup-2026-predictions/)** — every round's picks and how they've done, updated as results land.
+
+### 🧑‍💻 Want to run it yourself? (no install)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/munshi007/worldcup-2026-predictions/blob/main/worldcup_colab.ipynb) — runs in your browser; just paste a free [TabPFN token](https://www.priorlabs.ai).
+
+---
+
+The model predicts international football match outcomes from engineered features — ELO ratings, recent form, head-to-head record, rest days, tournament importance, and squad market value — then blends the result with live market odds. Data comes from [martj42/international_results](https://github.com/martj42/international_results). Built on the [PriorLabs template](https://github.com/PriorLabs/tabpfn-football-predictions).
 
 ## Setup
 

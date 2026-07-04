@@ -16,6 +16,9 @@ LOG="logs/run_${STAMP}.log"
   echo
   # 2. Score every saved prediction file against actual results, and tune the blend weight.
   "$PY" score.py --tune predictions_*.csv
+  echo
+  # 3. Refresh the public dashboard's data file (docs/data.json) for the GitHub Pages site.
+  "$PY" export_web.py
 } 2>&1 | tee "$LOG"
 
 echo "Logged to $LOG"
