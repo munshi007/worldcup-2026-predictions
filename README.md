@@ -4,6 +4,8 @@ Live win/draw/loss predictions for the 2026 World Cup, using [TabPFN](https://gi
 
 **Current track record: 75% outcome accuracy · 0.67 log-loss across 28 graded matches** (vs a ~0.86 / ~59% baseline).
 
+[![2026 World Cup predictions dashboard](docs/preview.png)](https://munshi007.github.io/worldcup-2026-predictions/)
+
 ### 👀 Just want to see the predictions? (no code)
 **→ [Live dashboard](https://munshi007.github.io/worldcup-2026-predictions/)** — every round's picks and how they've done, updated as results land.
 
