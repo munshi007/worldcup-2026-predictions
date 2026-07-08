@@ -144,7 +144,7 @@ function card(m){
     </div>${bar(m)}</div>`;
 }
 
-fetch("data.json").then(r=>r.json()).then(d=>{
+fetch("data.json?t=" + Date.now()).then(r=>r.json()).then(d=>{
   const rec = d.record;
   if(rec){
     document.getElementById("record").innerHTML = `<div class="stats">
