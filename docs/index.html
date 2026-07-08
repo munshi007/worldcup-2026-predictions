@@ -46,9 +46,16 @@
   .stat .l .up{color:var(--home)}
   .updated{font-family:var(--mono); font-size:11px; color:var(--mut2); text-align:right; margin-bottom:26px}
   /* section */
-  .sec{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut);
-    display:flex; align-items:center; gap:10px; margin:30px 4px 12px}
+  .sec{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink);
+    display:flex; align-items:center; gap:10px; margin:30px 4px 12px; font-weight:700}
   .sec::after{content:""; flex:1; height:1px; background:var(--line)}
+  .chip{font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase;
+    padding:3px 8px; border-radius:5px; font-weight:700}
+  .chip.live{color:#0d1014; background:var(--gold)}
+  .chip.done{color:var(--mut); background:rgba(255,255,255,.06)}
+  .chip.pending{color:var(--mut2); border:1px solid var(--line); background:transparent}
+  .placeholder{border:1px dashed var(--line2); border-radius:14px; padding:20px; text-align:center;
+    color:var(--mut2); font-family:var(--mono); font-size:12px; letter-spacing:.02em; margin-bottom:10px}
   /* match card */
   .m{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px 18px; margin-bottom:10px}
   .m .top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:11px}
@@ -108,7 +115,9 @@ const FLAGS = {
   "Portugal":"🇵🇹","Spain":"🇪🇸","Switzerland":"🇨🇭","Colombia":"🇨🇴","Japan":"🇯🇵","Germany":"🇩🇪",
   "Netherlands":"🇳🇱","Sweden":"🇸🇪","Ivory Coast":"🇨🇮","Ecuador":"🇪🇨","Senegal":"🇸🇳","Ghana":"🇬🇭",
   "Bosnia and Herzegovina":"🇧🇦","DR Congo":"🇨🇩","Algeria":"🇩🇿","Croatia":"🇭🇷","Austria":"🇦🇹",
-  "Cape Verde":"🇨🇻","Australia":"🇦🇺","South Africa":"🇿🇦","South Korea":"🇰🇷","Nigeria":"🇳🇬"
+  "Cape Verde":"🇨🇻","Australia":"🇦🇺","South Africa":"🇿🇦","South Korea":"🇰🇷","Nigeria":"🇳🇬",
+  "Iran":"🇮🇷","Iraq":"🇮🇶","Jordan":"🇯🇴","New Zealand":"🇳🇿","Panama":"🇵🇦","Saudi Arabia":"🇸🇦",
+  "Uruguay":"🇺🇾","Uzbekistan":"🇺🇿"
 };
 const fl = t => FLAGS[t] || "🏳️";
 const pct = x => Math.round(x*100) + "%";
@@ -145,13 +154,19 @@ fetch("data.json").then(r=>r.json()).then(d=>{
     </div>`;
   }
   document.getElementById("updated").textContent = "updated " + fmtDate(d.updated);
+  const CHIP = {
+    done: r => `<span class="chip done">${r.matches.length} played</span>`,
+    live: r => `<span class="chip live">live · ${r.matches.filter(m=>!m.settled).length} to play</span>`,
+    pending: r => `<span class="chip pending">awaiting fixtures</span>`,
+  };
+  const rounds = d.rounds || [];   // fall back gracefully if old data shape
   let html = "";
-  if(d.upcoming.length){
-    html += `<h2 class="sec">Upcoming predictions</h2>` + d.upcoming.map(card).join("");
-  }
-  if(d.results.length){
-    html += `<h2 class="sec">Results</h2>` + d.results.map(card).join("");
-  }
+  rounds.forEach(r => {
+    html += `<h2 class="sec">${r.name}${(CHIP[r.status]||CHIP.pending)(r)}</h2>`;
+    html += r.matches.length
+      ? r.matches.map(card).join("")
+      : `<div class="placeholder">Fixtures lock once the previous round finishes.</div>`;
+  });
   document.getElementById("content").innerHTML = html || `<p class="loading">No predictions yet.</p>`;
 }).catch(e=>{
   document.getElementById("content").innerHTML = `<p class="loading">Could not load data.json — if you're opening this file directly, run it through a web server (or view the live GitHub Pages URL). ${e}</p>`;

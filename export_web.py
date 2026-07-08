@@ -17,6 +17,26 @@ import predict as P
 CLASSES = ["away_win", "draw", "home_win"]
 PICK_LABEL = {"home_win": "home", "draw": "draw", "away_win": "away"}
 
+# 2026 World Cup round windows [start, end) — boundaries fall in the gaps between rounds.
+# The knockout rounds are always shown (as placeholders if no fixtures yet); "Group stage"
+# only appears if it has matches.
+ROUND_BOUNDS = [
+    ("Group stage",    "1900-01-01", "2026-06-28"),
+    ("Round of 32",    "2026-06-28", "2026-07-04"),
+    ("Round of 16",    "2026-07-04", "2026-07-09"),
+    ("Quarter-finals", "2026-07-09", "2026-07-13"),
+    ("Semi-finals",    "2026-07-13", "2026-07-17"),
+    ("Final",          "2026-07-17", "2100-01-01"),
+]
+ALWAYS_SHOW = {"Round of 32", "Round of 16", "Quarter-finals", "Semi-finals", "Final"}
+
+
+def round_of(date_str):
+    for name, lo, hi in ROUND_BOUNDS:
+        if lo <= date_str < hi:
+            return name
+    return "Other"
+
 
 def main():
     # --- gather all predictions, keep the most recent file's row per fixture ---
@@ -59,6 +79,7 @@ def main():
             "p_away": round(p[2], 4),
             "pick": pick,
             "settled": settled,
+            "round": round_of(r["date"].strftime("%Y-%m-%d")),
         }
         if settled:
             row["actual"] = PICK_LABEL[r["outcome"]]
@@ -82,18 +103,31 @@ def main():
             "baseline_logloss": 0.86,
         }
 
+    # --- group matches into tournament rounds (with placeholders for future rounds) ---
+    by_round = {}
+    for x in matches:
+        by_round.setdefault(x["round"], []).append(x)
+    rounds = []
+    for name, _, _ in ROUND_BOUNDS:
+        ms = sorted(by_round.get(name, []), key=lambda z: (z["date"], z["home"]))
+        if not ms and name not in ALWAYS_SHOW:
+            continue
+        status = "pending" if not ms else ("done" if all(z["settled"] for z in ms) else "live")
+        rounds.append({"name": name, "status": status, "matches": ms})
+
     latest = m["date"].max()
     out = {
         "updated": P.TODAY.strftime("%Y-%m-%d") if hasattr(P, "TODAY") else str(latest.date()),
         "record": record,
-        "upcoming": [x for x in matches if not x["settled"]],
-        "results": [x for x in matches if x["settled"]][::-1],  # most recent first
+        "rounds": rounds,
     }
     with open("docs/data.json", "w") as f:
         json.dump(out, f, indent=2)
-    up, rz = len(out["upcoming"]), len(out["results"])
+    settled_n = sum(1 for x in matches if x["settled"])
+    rounds_desc = ", ".join(f"{r['name']}({len(r['matches'])},{r['status']})" for r in rounds)
     rec = f"{record['accuracy']:.0%} acc, {record['logloss']:.3f} log-loss on {record['n']}" if record else "no results yet"
-    print(f"docs/data.json written: {up} upcoming, {rz} settled | record: {rec}")
+    print(f"docs/data.json written: {len(matches)} matches, {settled_n} settled | record: {rec}")
+    print(f"  rounds: {rounds_desc}")
 
 
 if __name__ == "__main__":
