@@ -29,9 +29,19 @@ def main():
     preds["date"] = pd.to_datetime(preds["date"])
     preds = preds.drop_duplicates(["date", "home_team", "away_team"], keep="last")
 
-    # --- actual results ---
-    res = P.load_data()[["date", "home_team", "away_team", "home_score", "away_score", "outcome"]]
-    m = preds.merge(res, on=["date", "home_team", "away_team"], how="left")
+    # --- actual results (date-tolerant join) ---
+    # Knockout fixtures sometimes shift a day between when we predicted them and when they
+    # were played, so an exact date join wrongly marks played matches as "upcoming". Match
+    # on the team pair and accept the nearest result within a few days.
+    res = (P.load_data()[["date", "home_team", "away_team", "home_score", "away_score", "outcome"]]
+           .dropna(subset=["outcome"]).rename(columns={"date": "rdate"}))
+    j = preds.merge(res, on=["home_team", "away_team"], how="left")
+    j["ddiff"] = (j["rdate"] - j["date"]).abs().dt.days
+    TOL = 5
+    j.loc[j["ddiff"] > TOL, ["home_score", "away_score", "outcome", "rdate", "ddiff"]] = np.nan
+    m = (j.sort_values("ddiff")                       # NaN (no/too-far result) sorts last
+          .drop_duplicates(["date", "home_team", "away_team"], keep="first")
+          .sort_values("date"))
 
     matches = []
     for _, r in m.sort_values("date").iterrows():
